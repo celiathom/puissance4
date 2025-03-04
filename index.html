@@ -9,7 +9,21 @@
 <body>
 
     <h1>Puissance 4</h1>
-    <p id="currentPlayer">Tour du joueur : Rouge</p> <!-- Indicateur du joueur actuel -->
+    <p id="currentPlayer">Tour du joueur : Rouge</p>
+    
+    <!-- Popup pour sélectionner la taille -->
+    <div id="sizeModal" class="modal">
+        <div class="modal-content">
+            <h3>Choisissez la taille de la grille</h3>
+            <label for="rows">Lignes :</label>
+            <input type="number" id="rowsInput" value="6" min="4" max="10">
+            <label for="cols">Colonnes :</label>
+            <input type="number" id="colsInput" value="7" min="4" max="10">
+            <button onclick="startGame()">Démarrer</button>
+        </div>
+    </div>
+
+    <!-- Plateau de jeu -->
     <div id="gameBoard" class="grid"></div>
     <p id="winnerMessage"></p>
     <button id="resetButton">Rejouer</button>
@@ -17,4 +31,5 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 

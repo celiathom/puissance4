@@ -5,7 +5,6 @@ body {
 
 .grid { 
     display: grid; 
-    grid-template-columns: repeat(7, 50px); 
     gap: 5px; 
     margin: 20px auto; 
     width: max-content; 
@@ -56,4 +55,30 @@ body {
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 10px;
+}
+
+/* Styles du popup */
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Masquer le popup au début */
+#sizeModal {
+    display: none;
 }
