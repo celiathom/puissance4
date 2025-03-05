@@ -6,6 +6,8 @@ let modal = document.getElementById("sizeModal");
 let grid = [];
 let currentPlayer = "red";
 let gameOver = false;
+let scoreRouge = 0;
+let scoreJaune = 0;
 
 // Afficher la modale au chargement de la page
 window.onload = function() {
@@ -58,6 +60,7 @@ function dropToken(col) {
                 winnerMessage.textContent = `${currentPlayer === "red" ? "ROUGE" : "JAUNE"} a gagné !`;
                 winnerMessage.style.color = currentPlayer;
                 gameOver = true;
+                mettreAJourScore(currentPlayer);  // AJOUT DE LA MISE À JOUR DU SCORE
                 return;
             }
 
@@ -85,21 +88,20 @@ function animateTokenDrop(row, col, color) {
     token.style.position = "absolute";
     token.style.backgroundColor = color;
     token.style.left = `${col * 55}px`;
-    token.style.top = "-60px"; // Départ hors de la grille
+    token.style.top = "-60px";
     token.style.transition = "top 0.5s ease-in";
 
     board.appendChild(token);
     setTimeout(() => {
-        token.style.top = `${row * 55}px`; // Atterrissage
+        token.style.top = `${row * 55}px`; 
     }, 50);
     
     setTimeout(() => {
         token.remove();
         updateBoard();
-    }, 600); // Supprimer l'animation et afficher le jeton dans la grille
+    }, 600);
 }
 
-// Vérifier si la grille est remplie (match nul)
 function checkDraw() {
     return grid.every(row => row.every(cell => cell !== null));
 }
@@ -162,4 +164,16 @@ function resetGame() {
     createGrid();
 }
 
+// Ajout du système de score
+function mettreAJourScore(gagnant) {
+    if (gagnant === "red") {
+        scoreRouge++;
+        document.getElementById("scoreRouge").textContent = scoreRouge;
+    } else if (gagnant === "yellow") {
+        scoreJaune++;
+        document.getElementById("scoreJaune").textContent = scoreJaune;
+    }
+}
+
+// Bouton de réinitialisation
 document.getElementById("resetButton").addEventListener("click", resetGame);

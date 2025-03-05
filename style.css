@@ -57,6 +57,31 @@ body {
     margin-bottom: 10px;
 }
 
+/* Styles du tableau des scores */
+#scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+#scoreboard p {
+    padding: 10px 20px;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+    border: 2px solid #ccc;
+}
+
+#scoreRouge {
+    color: red;
+}
+
+#scoreJaune {
+    color: goldenrod;
+}
+
 /* Styles du popup */
 .modal {
     display: flex;

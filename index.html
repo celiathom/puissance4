@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Puissance 4</title>
     <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
 
     <h1>Puissance 4</h1>
     <p id="currentPlayer">Tour du joueur : Rouge</p>
-    
+
+    <!-- Affichage des scores -->
+    <div id="scoreboard">
+        <p>🔴 Joueur Rouge : <span id="scoreRouge">0</span></p>
+        <p>🟡 Joueur Jaune : <span id="scoreJaune">0</span></p>
+    </div>
+
     <!-- Popup pour sélectionner la taille -->
     <div id="sizeModal" class="modal">
         <div class="modal-content">
@@ -31,5 +38,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
