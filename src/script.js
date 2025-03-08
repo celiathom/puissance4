@@ -2,16 +2,20 @@ let rows, cols;
 let board = document.getElementById("gameBoard");
 let winnerMessage = document.getElementById("winnerMessage"); 
 let currentPlayerText = document.getElementById("currentPlayer"); 
-let modal = document.getElementById("sizeModal");
+let sizeModal = document.getElementById("sizeModal");
+let nameModal = document.getElementById("nameModal");
+let validateButton = document.getElementById("validateNames");
+let startButton = document.getElementById("startGame");
+
 let grid = [];
 let currentPlayer = "red";
 let gameOver = false;
 let scoreRouge = 0;
 let scoreJaune = 0;
 
-// Afficher la modale au chargement de la page
+// Afficher la première modale (taille de la grille) au chargement
 window.onload = function() {
-    modal.style.display = "flex";
+    sizeModal.style.display = "flex";
 };
 
 // Fonction pour démarrer le jeu après sélection de la taille
@@ -19,26 +23,51 @@ function startGame() {
     rows = parseInt(document.getElementById("rowsInput").value);
     cols = parseInt(document.getElementById("colsInput").value);
     
-    if (isNaN(rows) || isNaN(cols) || rows < 4 || cols < 4 || rows > 10 || cols > 10) {
-        alert("Veuillez entrer une taille entre 4 et 10.");
+    if (isNaN(rows) || isNaN(cols) || rows < 4 || cols < 4 || rows > 40 || cols > 40) {
+        alert("Veuillez entrer une taille entre 4 et 40.");
         return;
     }
 
     grid = Array.from({ length: rows }, () => Array(cols).fill(null));
-    modal.style.display = "none"; // Cacher le popup
-    createGrid();
+    sizeModal.style.display = "none"; // Cacher la pop-up des dimensions
+    nameModal.style.display = "flex"; // Afficher la pop-up des prénoms
 }
 
-// Fonction pour générer la grille dynamiquement
+// Vérifier et stocker les prénoms des joueurs
+validateButton.addEventListener("click", function () {
+    const playerRed = document.getElementById("playerRed").value.trim();
+    const playerYellow = document.getElementById("playerYellow").value.trim();
+
+    if (playerRed === "" || playerYellow === "") {
+        alert("Veuillez entrer les prénoms des deux joueurs !");
+        return;
+    }
+
+    localStorage.setItem("playerRed", playerRed);
+    localStorage.setItem("playerYellow", playerYellow);
+
+    nameModal.style.display = "none"; // Fermer la pop-up des prénoms
+
+    document.getElementById("displayPlayerRed").textContent = playerRed;
+    document.getElementById("displayPlayerYellow").textContent = playerYellow;
+
+    createGrid(); // Générer la grille après validation des prénoms
+});
+
+// Génération dynamique de la grille
 function createGrid() {
     board.innerHTML = ""; 
     board.style.display = "grid";
-    board.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+
+    let cellSize = cols > 15 || rows > 15 ? 30 : 50;
+    board.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
 
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             let cell = document.createElement("div");
             cell.classList.add("cell");
+            cell.style.width = `${cellSize}px`;
+            cell.style.height = `${cellSize}px`;
             cell.dataset.row = row;
             cell.dataset.col = col;
             cell.addEventListener("click", () => dropToken(col));
@@ -47,25 +76,28 @@ function createGrid() {
     }
 }
 
+// Gestion du bouton "Démarrer"
+startButton.addEventListener("click", startGame);
+
 // Fonction pour ajouter un jeton dans la colonne choisie avec animation
 function dropToken(col) {
     if (gameOver) return;
 
     for (let row = rows - 1; row >= 0; row--) {
         if (!grid[row][col]) {
-            grid[row][col] = currentPlayer;
-            animateTokenDrop(row, col, currentPlayer);
-            
+            grid[row][col] = currentPlayer; // Place le jeton dans la grille
+            animateTokenDrop(row, col, currentPlayer); // Animation du jeton qui tombe
+
             if (checkWin(row, col)) {
                 winnerMessage.textContent = `${currentPlayer === "red" ? "ROUGE" : "JAUNE"} a gagné !`;
                 winnerMessage.style.color = currentPlayer;
                 gameOver = true;
-                mettreAJourScore(currentPlayer);  // AJOUT DE LA MISE À JOUR DU SCORE
+                mettreAJourScore(currentPlayer);
                 return;
             }
 
             if (checkDraw()) {
-                winnerMessage.textContent = "MATCH nul !";
+                winnerMessage.textContent = "MATCH NUL !";
                 winnerMessage.style.color = "blue";
                 gameOver = true;
                 return;
@@ -80,67 +112,31 @@ function dropToken(col) {
 
 // Fonction pour animer la chute du jeton
 function animateTokenDrop(row, col, color) {
-    let cell = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
+    let cellSize = cols > 15 || rows > 15 ? 30 : 50; // Ajustement de la taille
     let token = document.createElement("div");
-    token.style.width = "50px";
-    token.style.height = "50px";
+
+    token.classList.add("falling"); // Classe CSS pour animation
+    token.style.width = `${cellSize}px`;
+    token.style.height = `${cellSize}px`;
     token.style.borderRadius = "50%";
     token.style.position = "absolute";
     token.style.backgroundColor = color;
-    token.style.left = `${col * 55}px`;
+    token.style.left = `${col * (cellSize + 5)}px`;
     token.style.top = "-60px";
     token.style.transition = "top 0.5s ease-in";
 
     board.appendChild(token);
     setTimeout(() => {
-        token.style.top = `${row * 55}px`; 
+        token.style.top = `${row * (cellSize + 5)}px`; 
     }, 50);
     
     setTimeout(() => {
         token.remove();
-        updateBoard();
+        updateBoard(); // Met à jour la grille après l'animation
     }, 600);
 }
 
-function checkDraw() {
-    return grid.every(row => row.every(cell => cell !== null));
-}
-
-// Vérifier si un joueur a gagné
-function checkWin(row, col) {
-    return (
-        checkDirection(row, col, 0, 1) ||  
-        checkDirection(row, col, 1, 0) ||  
-        checkDirection(row, col, 1, 1) ||  
-        checkDirection(row, col, 1, -1)    
-    );
-}
-
-function checkDirection(row, col, rowDir, colDir) {
-    let count = 1;
-    let color = grid[row][col];
-
-    count += countInDirection(row, col, rowDir, colDir, color);
-    count += countInDirection(row, col, -rowDir, -colDir, color);
-
-    return count >= 4;
-}
-
-function countInDirection(row, col, rowDir, colDir, color) {
-    let count = 0;
-    let r = row + rowDir;
-    let c = col + colDir;
-
-    while (r >= 0 && r < rows && c >= 0 && c < cols && grid[r][c] === color) {
-        count++;
-        r += rowDir;
-        c += colDir;
-    }
-
-    return count;
-}
-
-// Mise à jour de l'affichage de la grille
+// Mise à jour de l'affichage de la grille après animation
 function updateBoard() {
     let cells = document.querySelectorAll(".cell");
     cells.forEach(cell => {
@@ -154,26 +150,74 @@ function updateBoard() {
     });
 }
 
-// Réinitialisation du jeu
-function resetGame() {
-    grid = Array.from({ length: rows }, () => Array(cols).fill(null));
-    currentPlayer = "red"; 
-    gameOver = false; 
-    winnerMessage.textContent = ""; 
-    currentPlayerText.textContent = "Tour du joueur : Rouge"; 
-    createGrid();
-}
+// Fonction pour ajouter un jeton dans la colonne choisie avec animation
+function dropToken(col) {
+    if (gameOver) return;
 
-// Ajout du système de score
-function mettreAJourScore(gagnant) {
-    if (gagnant === "red") {
-        scoreRouge++;
-        document.getElementById("scoreRouge").textContent = scoreRouge;
-    } else if (gagnant === "yellow") {
-        scoreJaune++;
-        document.getElementById("scoreJaune").textContent = scoreJaune;
+    for (let row = rows - 1; row >= 0; row--) {
+        if (!grid[row][col]) {
+            grid[row][col] = currentPlayer; // Place le jeton dans la grille
+            animateTokenDrop(row, col, currentPlayer); // Animation du jeton qui tombe
+
+            if (checkWin(row, col)) {
+                winnerMessage.textContent = `${currentPlayer === "red" ? "ROUGE" : "JAUNE"} a gagné !`;
+                winnerMessage.style.color = currentPlayer;
+                gameOver = true;
+                mettreAJourScore(currentPlayer);
+                return;
+            }
+
+            if (checkDraw()) {
+                winnerMessage.textContent = "MATCH NUL !";
+                winnerMessage.style.color = "blue";
+                gameOver = true;
+                return;
+            }
+
+            currentPlayer = currentPlayer === "red" ? "yellow" : "red";
+            currentPlayerText.textContent = `Tour du joueur : ${currentPlayer === "red" ? "Rouge" : "Jaune"}`;
+            return;
+        }
     }
 }
 
-// Bouton de réinitialisation
-document.getElementById("resetButton").addEventListener("click", resetGame);
+// Fonction pour animer la chute du jeton
+function animateTokenDrop(row, col, color) {
+    let cellSize = cols > 15 || rows > 15 ? 30 : 50; // Ajustement de la taille
+    let token = document.createElement("div");
+
+    token.classList.add("falling"); // Classe CSS pour animation
+    token.style.width = `${cellSize}px`;
+    token.style.height = `${cellSize}px`;
+    token.style.borderRadius = "50%";
+    token.style.position = "absolute";
+    token.style.backgroundColor = color;
+    token.style.left = `${col * (cellSize + 5)}px`;
+    token.style.top = "-60px";
+    token.style.transition = "top 0.5s ease-in";
+
+    board.appendChild(token);
+    setTimeout(() => {
+        token.style.top = `${row * (cellSize + 5)}px`; 
+    }, 50);
+    
+    setTimeout(() => {
+        token.remove();
+        updateBoard(); // Met à jour la grille après l'animation
+    }, 600);
+}
+
+// Mise à jour de l'affichage de la grille après animation
+function updateBoard() {
+    let cells = document.querySelectorAll(".cell");
+    cells.forEach(cell => {
+        let row = cell.dataset.row;
+        let col = cell.dataset.col;
+        if (grid[row][col] === "red") {
+            cell.style.backgroundColor = "red";
+        } else if (grid[row][col] === "yellow") {
+            cell.style.backgroundColor = "yellow";
+        }
+    });
+}
+
