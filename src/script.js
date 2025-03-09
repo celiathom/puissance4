@@ -7,18 +7,30 @@ let nameModal = document.getElementById("nameModal");
 let validateButton = document.getElementById("validateNames");
 let startButton = document.getElementById("startGame");
 let resetButton = document.getElementById("resetButton");
+let undoButton = document.getElementById("undoMove");
 
 let grid = [];
 let currentPlayer = "red";
 let gameOver = false;
 let scoreRouge = 0;
 let scoreJaune = 0;
+let historiqueCoups = []; //Stockage des coups
 
 window.onload = function () {
+// Appliquer un style au message du gagnant
+    winnerMessage.style.fontSize = "2.5rem";
+    winnerMessage.style.fontWeight = "bold";
+    winnerMessage.style.color = "#333";
+    winnerMessage.style.textAlign = "center";
+    winnerMessage.style.margin = "15px 0";
+    winnerMessage.style.padding = "10px";
+    winnerMessage.style.borderRadius = "8px";
+    winnerMessage.style.transition = "all 0.3s ease";
+    
     sizeModal.style.display = "flex";
 };
 
-// ✅ Fonction pour démarrer le jeu
+//Démarrer le jeu
 function startGame() {
     rows = parseInt(document.getElementById("rowsInput").value);
     cols = parseInt(document.getElementById("colsInput").value);
@@ -29,11 +41,35 @@ function startGame() {
     }
 
     grid = Array.from({ length: rows }, () => Array(cols).fill(null));
+    historiqueCoups = [];
+    gameOver = false;
+    winnerMessage.textContent = "";
+    winnerMessage.style.backgroundColor = "transparent";
+    currentPlayer = "red";
+    currentPlayerText.textContent = `Tour du joueur : ${currentPlayer}`;
+    undoButton.style.display = "none";
     sizeModal.style.display = "none";
     nameModal.style.display = "flex";
 }
 
-// ✅ Fonction pour valider les noms et afficher la grille
+// Réinitialiser le jeu
+function resetGame() {
+    if (rows && cols) {
+        grid = Array.from({ length: rows }, () => Array(cols).fill(null));
+        historiqueCoups = [];
+        gameOver = false;
+        winnerMessage.textContent = "";
+        winnerMessage.style.backgroundColor = "transparent";
+        currentPlayer = "red";
+        currentPlayerText.textContent = `Tour du joueur : ${currentPlayer}`;
+        undoButton.style.display = "none";
+        updateBoard();
+    } else {
+        sizeModal.style.display = "flex";
+    }
+}
+
+// Validation des joueurs
 validateButton.addEventListener("click", function () {
     const playerRed = document.getElementById("playerRed").value.trim();
     const playerYellow = document.getElementById("playerYellow").value.trim();
@@ -47,20 +83,19 @@ validateButton.addEventListener("click", function () {
     localStorage.setItem("playerYellow", playerYellow);
 
     nameModal.style.display = "none";
-
     document.getElementById("displayPlayerRed").textContent = playerRed;
     document.getElementById("displayPlayerYellow").textContent = playerYellow;
 
     createGrid();
 });
 
-// ✅ Fonction pour générer la grille
+// Création dynamique de la grille
 function createGrid() {
     board.innerHTML = "";
     board.style.display = "grid";
-
     let cellSize = Math.min(500 / cols, 500 / rows);
     board.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+    board.style.position = "relative";
 
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
@@ -77,98 +112,129 @@ function createGrid() {
 }
 
 startButton.addEventListener("click", startGame);
-resetButton.addEventListener("click", resetGame);
+resetButton.addEventListener("click", resetGame); 
+undoButton.addEventListener("click", undoLastMove);
 
-// ✅ Fonction pour ajouter un jeton et vérifier la victoire
+// Ajouter un jeton
 function dropToken(col) {
     if (gameOver) return;
 
     for (let row = rows - 1; row >= 0; row--) {
         if (!grid[row][col]) {
-            animateTokenDrop(row, col, currentPlayer);
+            animateTokenDrop(row, col, currentPlayer, () => {
+                grid[row][col] = currentPlayer;
+                historiqueCoups.push({ row, col, player: currentPlayer });
+                updateBoard();
 
-            grid[row][col] = currentPlayer; // Enregistre le coup dans la grille
+                if (checkWin(row, col)) {
+                    let playerName = currentPlayer === "red" ? 
+                        document.getElementById("displayPlayerRed").textContent : 
+                        document.getElementById("displayPlayerYellow").textContent;
+                    
+                    winnerMessage.textContent = `${playerName} a gagné !`;
+                    winnerMessage.style.backgroundColor = currentPlayer === "red" ? "#ffcccc" : "#ffffcc";
+                    winnerMessage.style.border = `3px solid ${currentPlayer}`;
+                    
+                    winnerMessage.style.transform = "scale(1.1)";
+                    setTimeout(() => {
+                        winnerMessage.style.transform = "scale(1)";
+                    }, 300);
+                    
+                    gameOver = true;
+                    updateScore(currentPlayer);
+                    return;
+                }
 
-            // ✅ Vérifier si ce coup mène à la victoire
-            if (checkWin(row, col)) {
-                winnerMessage.textContent = `${currentPlayer === "red" ? "ROUGE" : "JAUNE"} a gagné !`;
-                winnerMessage.style.color = currentPlayer;
-                gameOver = true;
+                if (checkDraw()) {
+                    winnerMessage.textContent = "MATCH NUL !";
+                    winnerMessage.style.backgroundColor = "#cccccc";
+                    winnerMessage.style.border = "3px solid #666666";
+                    gameOver = true;
+                    return;
+                }
 
-                // ✅ Ajouter 1 point UNIQUEMENT si un joueur gagne
-                updateScore(currentPlayer);
-                return;
-            }
-
-            if (checkDraw()) {
-                winnerMessage.textContent = "MATCH NUL !";
-                winnerMessage.style.color = "blue";
-                gameOver = true;
-                return;
-            }
-
-            // Changer de joueur
-            currentPlayer = currentPlayer === "red" ? "yellow" : "red";
-            currentPlayerText.textContent = `Tour du joueur : ${currentPlayer === "red" ? "Rouge" : "Jaune"}`;
+                currentPlayer = currentPlayer === "red" ? "yellow" : "red";
+                currentPlayerText.textContent = `Tour du joueur : ${currentPlayer}`;
+                undoButton.style.display = "inline-block";
+            });
             return;
         }
     }
 }
 
-// ✅ Mise à jour des scores UNIQUEMENT quand un joueur gagne
-function updateScore(winner) {
-    if (winner === "red") {
-        scoreRouge++;
-        document.getElementById("scoreRouge").textContent = scoreRouge;
-    } else if (winner === "yellow") {
-        scoreJaune++;
-        document.getElementById("scoreJaune").textContent = scoreJaune;
-    }
-}
-
-// ✅ Jetons qui s'adaptent à la grille
-function animateTokenDrop(row, col, color) {
-    let cell = document.querySelector("[data-row='0'][data-col='0']");
-    let cellSize = cell ? cell.offsetWidth : 50;
-
+//  Animation des pions
+function animateTokenDrop(row, col, color, callback) {
+    let cellSize = Math.min(500 / cols, 500 / rows);
+    
+    // Trouver la cellule cible
+    let targetCell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+    let topCell = document.querySelector(`.cell[data-row="0"][data-col="${col}"]`);
+    
+    // Récupérer les positions
+    let boardRect = board.getBoundingClientRect();
+    let cellRect = targetCell.getBoundingClientRect();
+    let topCellRect = topCell.getBoundingClientRect();
+    
+    // Créer le jeton avec position initiale en haut de la colonne
     let token = document.createElement("div");
-
-    token.style.width = `${cellSize}px`;
-    token.style.height = `${cellSize}px`;
+    token.classList.add("token");
+    token.style.width = `${cellSize - 10}px`;
+    token.style.height = `${cellSize - 10}px`;
     token.style.borderRadius = "50%";
-    token.style.position = "absolute";
     token.style.backgroundColor = color;
-    token.style.left = `${col * cellSize}px`;
-    token.style.top = "-60px";
-    token.style.transition = "top 0.6s ease-in";
-
+    token.style.position = "absolute";
+    token.style.left = `${topCellRect.left - boardRect.left + 5}px`; 
+    token.style.top = `${topCellRect.top - boardRect.top + 5}px`;
+    token.style.transition = "top 0.5s ease-in";
+    token.style.zIndex = "100";
+    
     board.appendChild(token);
-
+    
     setTimeout(() => {
-        token.style.top = `${row * cellSize}px`;
+        token.style.top = `${cellRect.top - boardRect.top + 5}px`;
+        
+        setTimeout(() => {
+            token.remove();
+            callback();
+        }, 550); 
     }, 50);
-
-    setTimeout(() => {
-        token.remove();
-        updateBoard();
-    }, 700);
 }
 
-// ✅ Mise à jour de la grille
+// Mettre à jour la grille après animation
 function updateBoard() {
     let cells = document.querySelectorAll(".cell");
     cells.forEach(cell => {
-        let row = cell.dataset.row;
-        let col = cell.dataset.col;
+        let row = parseInt(cell.dataset.row);
+        let col = parseInt(cell.dataset.col);
         if (grid[row][col] === "red") {
             cell.style.backgroundColor = "red";
         } else if (grid[row][col] === "yellow") {
             cell.style.backgroundColor = "yellow";
+        } else {
+            cell.style.backgroundColor = "lightgray";
         }
     });
 }
 
-// ✅ Vérifier la victoire
+// Annuler le dernier coup
+function undoLastMove() {
+    if (historiqueCoups.length === 0) return;
+    if (gameOver) {
+        gameOver = false;
+        winnerMessage.textContent = "";
+        winnerMessage.style.backgroundColor = "transparent";
+        winnerMessage.style.border = "none";
+    }
+
+    let dernierCoup = historiqueCoups.pop();
+    grid[dernierCoup.row][dernierCoup.col] = null; 
+    updateBoard();
+    currentPlayer = dernierCoup.player; 
+    currentPlayerText.textContent = `Tour du joueur : ${currentPlayer}`;
+
+}
+
+// Victoire
 function checkWin(row, col) {
     let directions = [
         { r: 1, c: 0 }, { r: 0, c: 1 }, { r: 1, c: 1 }, { r: 1, c: -1 }
@@ -197,17 +263,18 @@ function countInDirection(row, col, rStep, cStep) {
     return count;
 }
 
-// ✅ Vérifier match nul
+// Match nul
 function checkDraw() {
     return grid.every(row => row.every(cell => cell !== null));
 }
 
-// ✅ Réinitialiser le jeu SANS remettre les scores à zéro
-function resetGame() {
-    grid = Array.from({ length: rows }, () => Array(cols).fill(null));
-    gameOver = false;
-    currentPlayer = "red";
-    winnerMessage.textContent = "";
-    currentPlayerText.textContent = "Tour du joueur : Rouge";
-    createGrid();
+// Mise à jour des scores
+function updateScore(color) {
+    if (color === "red") {
+        scoreRouge++;
+        document.getElementById("scoreRouge").textContent = scoreRouge;
+    } else {
+        scoreJaune++;
+        document.getElementById("scoreJaune").textContent = scoreJaune;
+    }
 }
