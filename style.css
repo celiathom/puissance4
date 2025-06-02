@@ -1,4 +1,3 @@
-/* Corps général */
 body {
   text-align: center;
   font-family: Arial, sans-serif;
@@ -8,21 +7,17 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
   image-rendering: pixelated;
-  margin: 0;
-  padding: 0;
 }
 
-/* Titre principal */
 h1 {
   font-family: "Press Start 2P", cursive;
   font-size: 32px;
   color: #ffcc00;
   text-shadow: 4px 4px 0px #000, 6px 6px 10px rgba(0, 0, 0, 0.5);
   text-transform: uppercase;
-  margin: 20px 10px;
+  margin-bottom: 20px;
 }
 
-/* Joueur actuel */
 #currentPlayer {
   font-family: "Press Start 2P", cursive;
   font-size: 16px;
@@ -32,52 +27,52 @@ h1 {
   margin-bottom: 10px;
 }
 
-/* Plateau de jeu responsive */
+/* Plateau de jeu */
 #gameBoard {
   display: grid;
   gap: 5px;
-  width: 100vw;
-  max-width: 100%;
-  overflow-x: auto;
+  width: fit-content;
+  margin: auto;
   padding: 10px;
-  margin: 0 auto;
   background-color: blue;
   border-radius: 10px;
+  position: relative; 
   border: 4px solid black;
-  box-sizing: border-box;
-  justify-content: center;
+  overflow: visible; 
 }
 
-/* Cellules */
+/* Cases de la grille */
 .cell {
+  width: 60px;
+  height: 60px;
   background-color: lightgray;
   border-radius: 50%;
   border: 3px solid black;
+  position: relative;
   transition: background-color 0.2s ease-in-out;
   box-shadow: inset 2px 2px 0px black;
-  box-sizing: border-box;
+  box-sizing: border-box; 
 }
 
-/* Jeton qui tombe */
+/*chute pour les jetons*/
 .falling {
   position: absolute;
   border-radius: 50%;
   border: 3px solid black;
   box-shadow: inset 2px 2px 0px black;
-  box-sizing: border-box;
-  z-index: 10;
+  box-sizing: border-box; 
+  z-index: 10; 
   transition: top 0.4s ease-in-out;
 }
 
-/* Score */
+/* Scoreboard */
 #scoreboard {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
   gap: 20px;
   font-size: 22px;
   font-weight: bold;
-  margin: 15px 10px;
+  margin-bottom: 15px;
 }
 
 #scoreboard p {
@@ -95,7 +90,7 @@ h1 {
   color: goldenrod;
 }
 
-/* Boutons généraux */
+/* Boutons */
 button {
   font-size: 16px;
   padding: 10px 15px;
@@ -119,7 +114,6 @@ button:active {
   transform: translate(2px, 2px);
 }
 
-/* Bouton annuler */
 #undoMove {
   display: none;
   background-color: #ff4444;
@@ -144,7 +138,7 @@ button:active {
   transform: translate(2px, 2px);
 }
 
-/* Fenêtres modales */
+/* Style du popup */
 .modal {
   display: flex;
   justify-content: center;
@@ -166,12 +160,11 @@ button:active {
 }
 
 /* Masquer les popups au début */
-#sizeModal,
-#nameModal {
+#sizeModal, #nameModal {
   display: none;
 }
 
-/* Désactive le zoom auto sur mobile */
+/* Empêche le zoom automatique sur les champs input mobile */
 input[type="text"],
 input[type="number"],
 input[type="email"],
