@@ -163,11 +163,3 @@ button:active {
 #sizeModal, #nameModal {
   display: none;
 }
-
-/* Empêche le zoom automatique sur les champs input mobile */
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"] {
-  font-size: 16px;
-}
